@@ -1,8 +1,6 @@
 
 from . import API_KEY, LOCAL_LLM, MODEL
 import openai
-import pprint
-
 
 class LLM:
     def __init__(self):
@@ -13,7 +11,7 @@ class LLM:
     # expects the instance of client and a prompt
 
     def setBehaviour(self, behave):
-        self._behaviour = behave
+        self._behave = behave
 
     def chat(self, userInput, conversationID):
         # add the unique conversationID to the cache it it's a new chat
