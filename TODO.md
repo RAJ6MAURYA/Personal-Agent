@@ -34,9 +34,16 @@ userPrompt -> ALlow LLM selection -> output
 
 TODO:
 
-1. client module to init a AI client - DONE
-2. function to generate the result 
-3. function to view the resule in a pretty format - output streaming
+1. client module to init a AI client - DONE ✅
+2. function to generate the result with conversation
+    GAPS:
+        1. how do we keep the context in check, The size of the conversation chat gets too big. how do we keep it in check.
+        2. how to know how much data can an LLM process - Context window of a LLM
+        3. how to clear unwanted from the cache.
+        4. HINT - Use token as a metrics for the length of the context,
+        5. HINT - summarize each output to have lesser tokens
+3. function to view the resule in a pretty format, output streaming DONE ✅
+    3.1 the function should be a generator, not a regular function
 4. add Gradio UI for interactive session 
 
 
