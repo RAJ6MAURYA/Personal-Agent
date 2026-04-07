@@ -6,7 +6,7 @@ class LLM:
     def __init__(self):
         self._client = openai.OpenAI(base_url=LOCAL_LLM, api_key=API_KEY)
         self._conversations = {}
-        self._behave = "Be nice and well spoken"
+        self._behave = "Be nice and talk on point"
 
     # expects the instance of client and a prompt
 
