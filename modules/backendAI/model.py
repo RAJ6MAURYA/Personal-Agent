@@ -2,15 +2,16 @@
 from . import API_KEY, LOCAL_LLM, MODEL
 import openai
 from . import tools
+import pprint
 
 
 class Summary:
     def __init__(self):
         self._client = openai.OpenAI(base_url=LOCAL_LLM, api_key=API_KEY)
-        self._behave = "keep Crutial Information and Summarise"
+        self._behave = "keep Crucial Information and Summarise"
 
     def summary(self, input):
-        message = [{"role": "assistant", "content": self._behave},
+        message = [{"role": "system", "content": self._behave},
                    {"role": "user", "content": input}]
         response = self._client.chat.completions.create(
             model=MODEL,
@@ -23,42 +24,39 @@ class Summary:
 class LLM:
     summariser = Summary()
 
-    def __init__(self):
+    def __init__(self, _system_prompt=""):
         self._client = openai.OpenAI(base_url=LOCAL_LLM, api_key=API_KEY)
-        self._conversations = {}
-        self._behave = "Be nice and talk on point"
+        self._system_prompt = _system_prompt or "Be nice and talk on point. Use the tools only when required and never output like JSON tool calls. Also only reply to the last message and other messages are for context"
+        self._history = []
 
-    def setBehaviour(self, behave):
-        self._behave = behave
-
-    def chat(self, userInput, conversationID):
-        # add the unique conversationID to the cache it it's a new chat
-        if conversationID not in self._conversations:
-            self._conversations[conversationID] = [
-                {"role": "system", "content": self._behave}]
-
-        # cache the userInput
-        self._conversations[conversationID].append(
-            {"role": "user", "content": userInput})
-
-        # Pass the conversation to the LLM
+    def _sentToLLM(self, message):
+        messages = [{"role": "system", "content": self._system_prompt}] + [{"role": h["role"], "content": h["content"]} for h in self._history] + [{"role": "user", "content": message}]
+        self._history.append({"role": "user", "content": message})
+        # print(message)
         response = self._client.chat.completions.create(
             model=MODEL,
-            messages=self._conversations[conversationID],
-            stream=True
+            messages=messages,
+            tools=tools.tools,
         )
-        output = ""
-        for chunk in response:
-            delta = chunk.choices[0].delta.content
-            if delta:
-                output += delta
-                yield delta
+        # print("RESPONSES:",response)
+        while response.choices[0].finish_reason == "tool_calls":
+            # print("TOOL called")
+            message = response.choices[0].message
+            tool_response = tools.handle_tools_call(message=message)
+            messages.append(message)
+            messages.extend(tool_response)
+            response = self._client.chat.completions.create(
+                model=MODEL,
+                messages=messages,
+                tools=tools.tools
+            )
 
-        if len(output) > 1000:
-            # cache the LLM response
-            self._conversations[conversationID].append(
-                {"role": "assistant", "content": self.summariser.summary(output)})
-        else:
-            # cache the LLM response
-            self._conversations[conversationID].append(
-                {"role": "assistant", "content": output})
+        output = response.choices[0].message.content
+        self._history.append({"role": "assistant", "content": output})
+        return output
+
+    def chat(self, message):
+        output = self._sentToLLM(message)
+        with open("conversation.txt", "w") as f:
+            print("HISTORY", self._history, file=f,end="\n")
+        return output
