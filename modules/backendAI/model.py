@@ -30,17 +30,16 @@ class LLM:
         self._history = []
 
     def _sentToLLM(self, message):
-        messages = [{"role": "system", "content": self._system_prompt}] + [{"role": h["role"], "content": h["content"]} for h in self._history] + [{"role": "user", "content": message}]
+        temp = "The Previous messages are only for context, Just answer to this question ONLY ->"
+        messages = [{"role": "system", "content": self._system_prompt}] + [{"role": h["role"], "content": h["content"]} for h in self._history] + [{"role": "user", "content": temp+message}]
         self._history.append({"role": "user", "content": message})
-        # print(message)
         response = self._client.chat.completions.create(
             model=MODEL,
             messages=messages,
             tools=tools.tools,
+            tool_choice="auto"
         )
-        # print("RESPONSES:",response)
         while response.choices[0].finish_reason == "tool_calls":
-            # print("TOOL called")
             message = response.choices[0].message
             tool_response = tools.handle_tools_call(message=message)
             messages.append(message)
