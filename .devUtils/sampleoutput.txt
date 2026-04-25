@@ -1,0 +1,4 @@
+
+chat completion response
+
+ChatCompletion(id='chatcmpl-91', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content='', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_lws0e8ws', function=Function(arguments='{"start_name":"r"}', name='get_names'), type='function', index=0)]))], created=1776246391, model='llama3.2', object='chat.completion', service_tier=None, system_fingerprint='fp_ollama', usage=CompletionUsage(completion_tokens=18, prompt_tokens=165, total_tokens=183, completion_tokens_details=None, prompt_tokens_details=None))

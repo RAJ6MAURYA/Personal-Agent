@@ -1,41 +1,62 @@
 
 from . import API_KEY, LOCAL_LLM, MODEL
 import openai
+from . import tools
+import pprint
 
-class LLM:
+
+class Summary:
     def __init__(self):
         self._client = openai.OpenAI(base_url=LOCAL_LLM, api_key=API_KEY)
-        self._conversations = {}
-        self._behave = "Be nice and talk on point"
+        self._behave = "Summarise the following text in under 400 characters. Keep only the most crucial information. Be concise."
 
-    # expects the instance of client and a prompt
-
-    def setBehaviour(self, behave):
-        self._behave = behave
-
-    def chat(self, userInput, conversationID):
-        # add the unique conversationID to the cache it it's a new chat
-        if conversationID not in self._conversations:
-            self._conversations[conversationID] = []
-
-        # cache the userInput
-        self._conversations[conversationID].append(
-            {"role": "user", "content": userInput})
-
-        # Pass the conversation to the LLM
-        response = self._client.responses.create(
+    def summary(self, text):
+        message = [{"role": "system", "content": self._behave},
+                   {"role": "user", "content": text}]
+        response = self._client.chat.completions.create(
             model=MODEL,
-            instructions=self._behave,
-            input=self._conversations[conversationID],
-            stream=True)
+            messages=message,
+        )
+        output = response.choices[0].message.content
+        return output
 
-        for event in response:
-            if event.type == "response.output_text.delta":
-                yield event.delta
-        
-        # full response
-        output = event.response.output[0].content[0].text
-        
-        # cache the LLM response
-        self._conversations[conversationID].append(
-            {"role": "assistant", "content": output})
+
+class LLM:
+    summariser = Summary()
+
+    def __init__(self, _system_prompt=""):
+        self._client = openai.OpenAI(base_url=LOCAL_LLM, api_key=API_KEY)
+        self._system_prompt = _system_prompt or "Be nice and talk on point. Use the tools only when required and never output like JSON tool calls. Also only reply to the last message and other messages are for context"
+        self._history = []
+
+    def _sentToLLM(self, message):
+        temp = "The Previous messages are only for context, Just answer to this question ONLY ->"
+        messages = [{"role": "system", "content": self._system_prompt}] + [{"role": h["role"], "content": h["content"]} for h in self._history] + [{"role": "user", "content": temp+message}]
+        self._history.append({"role": "user", "content": message})
+        response = self._client.chat.completions.create(
+            model=MODEL,
+            messages=messages,
+            tools=tools.tools,
+            tool_choice="auto"
+        )
+        while response.choices[0].finish_reason == "tool_calls":
+            message = response.choices[0].message
+            tool_response = tools.handle_tools_call(message=message)
+            messages.append(message)
+            messages.extend(tool_response)
+            response = self._client.chat.completions.create(
+                model=MODEL,
+                messages=messages,
+                tools=tools.tools
+            )
+
+        output = response.choices[0].message.content
+        if len(output) > 500:
+            self._history.append({"role": "assistant", "content": self.summariser.summary(output)})
+        return output
+
+    def chat(self, message):
+        output = self._sentToLLM(message)
+        with open("conversation.txt", "w") as f:
+            print("HISTORY", self._history, file=f,end="\n")
+        return output
