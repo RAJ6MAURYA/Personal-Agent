@@ -8,11 +8,11 @@ import pprint
 class Summary:
     def __init__(self):
         self._client = openai.OpenAI(base_url=LOCAL_LLM, api_key=API_KEY)
-        self._behave = "keep Crucial Information and Summarise"
+        self._behave = "Summarise the following text in under 400 characters. Keep only the most crucial information. Be concise."
 
-    def summary(self, input):
+    def summary(self, text):
         message = [{"role": "system", "content": self._behave},
-                   {"role": "user", "content": input}]
+                   {"role": "user", "content": text}]
         response = self._client.chat.completions.create(
             model=MODEL,
             messages=message,
@@ -51,7 +51,8 @@ class LLM:
             )
 
         output = response.choices[0].message.content
-        self._history.append({"role": "assistant", "content": output})
+        if len(output) > 500:
+            self._history.append({"role": "assistant", "content": self.summariser.summary(output)})
         return output
 
     def chat(self, message):
