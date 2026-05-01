@@ -1,3 +1,5 @@
 .venv
 test.ipynb
 TODO.md
+conversation.txt
+*.pyc
