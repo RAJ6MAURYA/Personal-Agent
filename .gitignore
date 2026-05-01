@@ -1,3 +1,6 @@
 .venv
 test.ipynb
 TODO.md
+conversation.txt
+*.pyc
+__pycache__
