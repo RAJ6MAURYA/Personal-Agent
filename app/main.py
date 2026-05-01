@@ -21,7 +21,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-
 app.include_router(router=chat)
 
 
