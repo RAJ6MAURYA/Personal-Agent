@@ -1,11 +1,12 @@
-import os
-import openai
+from __future__ import annotations
 from . import _tools
+import openai
 import pprint
 import ollama
 import sys
+import os
 
-_llmClient = None
+llmClient : None | LLM = None
 
 API_KEY = os.getenv("API_KEY","")
 LOCAL_LLM =os.getenv("LOCAL_LLM","http://localhost:11434/v1")
@@ -14,6 +15,7 @@ MODEL= os.getenv("MODEL","llama3.2")
 
 # It ensures the selected local LLM is available 
 def initLlm(model):
+    global llmClient
     response = ollama.list()
     available = [m.model.split(":")[0] for m in response.models]
     if model not in available:
@@ -31,7 +33,7 @@ def initLlm(model):
             sys.exit(1)
     else:
         print(f"{LLM} already available to use")
-    _llmClient = LLM()
+    llmClient = LLM()
 
 class Summary:
     def __init__(self):
@@ -69,7 +71,7 @@ class LLM:
         )
         while response.choices[0].finish_reason == "tool_calls":
             message = response.choices[0].message
-            tool_response = tools.handle_tools_call(message=message)
+            tool_response = _tools.handle_tools_call(message=message)
             messages.append(message)
             messages.extend(tool_response)
             response = self._client.chat.completions.create(

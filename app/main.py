@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
-from service.backendAI.model import initLlm
-import service.database as database
-from routes.chat import chat
+from app.service.backendAI.model import initLlm
+import app.service.database as database
+from app.routes.chat import chat
 from fastapi import FastAPI
 import uvicorn
 import os
