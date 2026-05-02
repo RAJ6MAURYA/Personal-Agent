@@ -19,3 +19,4 @@
 
 1. Python
 2. Ollama 
+3. FastAPI
