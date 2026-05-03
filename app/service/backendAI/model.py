@@ -1,4 +1,6 @@
 from __future__ import annotations
+from collections import deque
+from ._utils import messageGenerator
 from . import _tools
 import openai
 import pprint
@@ -59,10 +61,17 @@ class LLM:
     def __init__(self, _system_prompt=""):
         self._client = openai.OpenAI(base_url=LOCAL_LLM, api_key=API_KEY)
         self._system_prompt = _system_prompt or "Be nice and talk on point. Use the tools only when required and never output like JSON tool calls. Also only reply to the last message and other messages are for context"
-        self._history = []
+        self._history = deque()
 
     def _sentToLLM(self, message):
-        messages = messageGenerator(self._system_prompt, self._history, message)
+
+        # limiting history context
+        if len(self._history) > 15:
+            self._history.popleft()
+
+        messages = messageGenerator(
+            self._system_prompt, self._history, message)
+
         self._history.append({"role": "user", "content": message})
         response = self._client.chat.completions.create(
             model=MODEL,

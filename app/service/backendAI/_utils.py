@@ -1,7 +1,6 @@
 def messageGenerator(systemPrompt, history, message):
-    context_window = history[-10:]
     context_text = "\n".join(
-        [f"{h.get('role', 'user').upper()}: {h.get('content', '')}" for h in context_window]
+        [f"{h.get('role', 'user').upper()}: {h.get('content', '')}" for h in history]
     )
 
     systemPromptMessage = {
