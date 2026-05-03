@@ -7,7 +7,7 @@
 
 1. Install olamma from website - https://ollama.com/
 2. Make sure atlease 1 model is downloaded. [ default: llama3.2 ]
-3. models can be changed from `modules/backendAI/__init__.py`, so kindly update the file if you want to change the model as per your liking.
+3. models can be changed from `app/.env`, so kindly update the file if you want to change the model as per your liking.
 4. Run `pip3 install requirements.txt`
 5. That's it. you're good to go.
 
@@ -19,3 +19,4 @@
 
 1. Python
 2. Ollama 
+3. FastAPI

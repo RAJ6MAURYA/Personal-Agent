@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from .schemas import RequestChat, ResponseChat
-from app.service.backendAI import model
+from service.backendAI import model
 
 
 chat = APIRouter(prefix="/chat")
